@@ -1,0 +1,84 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * CORE PHILOSOPHY
+     * This ruleset implements a strict User-Ownership model designed for "Authorization Independence".
+     * By mapping Firebase Authentication UIDs directly to document paths and denormalizing 
+     * ownership fields, we ensure that security decisions are performant and do not require 
+     * additional document lookups (get() calls).
+     *
+     * DATA STRUCTURE
+     * - /studentProfiles/{studentUserId}: Root collection for student identities, where {studentUserId} is the Firebase UID.
+     * - /classSchedules/{classScheduleId}: Global read-only collection containing the academic timetable.
+     * - /studentProfiles/{studentUserId}/attendanceRecords/{attendanceRecordId}: User-specific subcollection for tracking attendance.
+     *
+     * KEY SECURITY DECISIONS
+     * 1. Ownership via Path: Access to profile and attendance data is restricted to the user whose UID matches the document path.
+     * 2. Read-Only Schedules: Class schedules are readable by any authenticated student but cannot be modified via the client.
+     * 3. Relational Integrity: When creating attendance records, the 'studentId' field must match the parent path's UID to ensure data consistency.
+     * 4. Prototyping Flexibility: Rules enforce WHO can write but do NOT strictly validate the schema/types of non-relational data.
+     */
+
+    // --- Helper Functions ---
+
+    /** @description Checks if the request is made by a signed-in user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the authenticated user's UID matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Verifies ownership and ensures the document exists before allowing updates or deletes. */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Rules for student profile documents. Ownership is tied to the Document ID.
+     * @path /studentProfiles/{studentUserId}
+     * @allow (create) if auth.uid matches studentUserId.
+     * @deny (read) if auth.uid does not match studentUserId.
+     * @principle Enforces direct document ownership via path-to-UID mapping.
+     */
+    match /studentProfiles/{studentUserId} {
+      allow get, list: if isOwner(studentUserId);
+      allow create: if isOwner(studentUserId);
+      allow update: if isExistingOwner(studentUserId);
+      allow delete: if isExistingOwner(studentUserId);
+
+      /**
+       * @description Rules for attendance records nested under a student profile.
+       * @path /studentProfiles/{studentUserId}/attendanceRecords/{attendanceRecordId}
+       * @allow (list) if the studentUserId in the path matches the requester's UID.
+       * @deny (create) if the internal 'studentId' field does not match the parent path.
+       * @principle Uses hierarchical path authorization and enforces relational integrity for ownership fields.
+       */
+      match /attendanceRecords/{attendanceRecordId} {
+        allow get, list: if isOwner(studentUserId);
+        allow create: if isOwner(studentUserId) && request.resource.data.studentId == studentUserId;
+        allow update: if isExistingOwner(studentUserId) && request.resource.data.studentId == resource.data.studentId;
+        allow delete: if isExistingOwner(studentUserId);
+      }
+    }
+
+    /**
+     * @description Rules for the global class schedule. Static data readable by all authenticated students.
+     * @path /classSchedules/{classScheduleId}
+     * @allow (get, list) if the user is signed in.
+     * @deny (write) always; this data is considered static/pre-coded.
+     * @principle Provides public read access for authenticated users while preventing unauthorized modifications.
+     */
+    match /classSchedules/{classScheduleId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if false;
+    }
+
+  }
+}

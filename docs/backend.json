@@ -1,0 +1,53 @@
+
+{
+  "entities": {
+    "StudentProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "StudentProfile",
+      "type": "object",
+      "description": "Represents a student's profile information, including their section group (A/B).",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "year": { "type": "string" },
+        "branch": { "type": "string" },
+        "rollNumber": { "type": "string" },
+        "collegeId": { "type": "string" },
+        "currentSemester": { "type": "number" },
+        "group": { "type": "string", "enum": ["A", "B"] }
+      },
+      "required": ["id", "name", "year", "branch", "rollNumber", "collegeId", "group"]
+    },
+    "ClassSchedule": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ClassSchedule",
+      "type": "object",
+      "description": "Defines the recurring details of a specific class, potentially filtered by group.",
+      "properties": {
+        "semester": { "type": "number" },
+        "branch": { "type": "string" },
+        "group": { "type": "string", "enum": ["A", "B", "ALL"] },
+        "class_name": { "type": "string" },
+        "subject_code": { "type": "string" },
+        "classroom": { "type": "string" },
+        "time_start": { "type": "string" },
+        "time_end": { "type": "string" },
+        "day": { "type": "string" }
+      },
+      "required": ["semester", "branch", "group", "class_name", "subject_code", "day"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/studentProfiles/{studentUserId}": {
+      "schema": { "$ref": "#/entities/StudentProfile" },
+      "description": "Student profile data."
+    },
+    "/studentProfiles/{studentUserId}/attendanceRecords/{recordId}": {
+      "schema": { "title": "AttendanceRecord", "type": "object", "properties": {} },
+      "description": "Individual attendance records."
+    }
+  }
+}

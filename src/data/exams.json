@@ -1,0 +1,7 @@
+
+{
+  "periods": [
+    { "start": "2026-02-23", "end": "2026-02-28", "type": "Mid-Semester Examinations" },
+    { "start": "2026-05-15", "end": "2026-05-30", "type": "End-Semester Examinations" }
+  ]
+}

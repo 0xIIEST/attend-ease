@@ -1,0 +1,32 @@
+
+{
+  "semesterConfig": {
+    "start": "2026-01-06",
+    "end": "2026-05-30"
+  },
+  "classes": [
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Basic Electrical", "subject_code": "EE101", "classroom": "L-102", "time_start": "09:00", "time_end": "10:50", "day": "Tuesday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Graphics", "subject_code": "CS103", "classroom": "DRW-LAB", "time_start": "09:55", "time_end": "12:40", "day": "Thursday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Energy Environment", "subject_code": "EN101", "classroom": "U-513", "time_start": "09:00", "time_end": "10:50", "day": "Friday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Physics", "subject_code": "PH101", "classroom": "U-513", "time_start": "13:50", "time_end": "14:45", "day": "Wednesday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Physics", "subject_code": "PH101", "classroom": "U-802", "time_start": "10:50", "time_end": "12:40", "day": "Tuesday" },
+    { "semester": 2, "branch": "CSB", "group": "B", "class_name": "Physics Lab", "subject_code": "PH191", "classroom": "PH-LAB", "time_start": "09:55", "time_end": "12:40", "day": "Wednesday" },
+    { "semester": 2, "branch": "CSB", "group": "A", "class_name": "Physics Lab", "subject_code": "PH191", "classroom": "PH-LAB", "time_start": "09:55", "time_end": "12:40", "day": "Wednesday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Basic Electrical", "subject_code": "EE101", "classroom": "U-513", "time_start": "09:55", "time_end": "10:50", "day": "Monday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Mathematics", "subject_code": "MA101", "classroom": "U-513", "time_start": "10:50", "time_end": "12:40", "day": "Friday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Maths", "subject_code": "MA101", "classroom": "U-513", "time_start": "14:45", "time_end": "16:35", "day": "Wednesday" },
+    { "semester": 2, "branch": "CSB", "group": "B", "class_name": "Electrical Lab", "subject_code": "EE191", "classroom": "EE-LAB", "time_start": "13:50", "time_end": "16:35", "day": "Tuesday" },
+    { "semester": 2, "branch": "CSB", "group": "A", "class_name": "Electrical Lab", "subject_code": "EE191", "classroom": "EE-LAB", "time_start": "13:50", "time_end": "16:35", "day": "Monday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Data Structure", "subject_code": "CS101", "classroom": "U-413", "time_start": "13:50", "time_end": "15:40", "day": "Thursday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "AI & ML", "subject_code": "CS102", "classroom": "U-513", "time_start": "10:50", "time_end": "12:40", "day": "Monday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "AI & ML", "subject_code": "CS102", "classroom": "U-513", "time_start": "09:00", "time_end": "09:55", "day": "Thursday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Lunch", "subject_code": "BREAK", "classroom": "CANTEEN", "time_start": "12:40", "time_end": "13:50", "day": "Monday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Lunch", "subject_code": "BREAK", "classroom": "CANTEEN", "time_start": "12:40", "time_end": "13:50", "day": "Tuesday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Lunch", "subject_code": "BREAK", "classroom": "CANTEEN", "time_start": "12:40", "time_end": "13:50", "day": "Wednesday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Lunch", "subject_code": "BREAK", "classroom": "CANTEEN", "time_start": "12:40", "time_end": "13:50", "day": "Thursday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Lunch", "subject_code": "BREAK", "classroom": "CANTEEN", "time_start": "12:40", "time_end": "13:50", "day": "Friday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "PT", "subject_code": "PE101", "classroom": "GROUND", "time_start": "15:40", "time_end": "16:35", "day": "Thursday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Data Structure Lab", "subject_code": "CS191", "classroom": "CL-01", "time_start": "13:50", "time_end": "14:45", "day": "Friday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Data Structures", "subject_code": "CS101", "classroom": "U-513", "time_start": "09:00", "time_end": "09:55", "day": "Wednesday" }
+  ]
+}

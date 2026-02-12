@@ -26,7 +26,7 @@
     { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Lunch", "subject_code": "BREAK", "classroom": "CANTEEN", "time_start": "12:40", "time_end": "13:50", "day": "Thursday" },
     { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Lunch", "subject_code": "BREAK", "classroom": "CANTEEN", "time_start": "12:40", "time_end": "13:50", "day": "Friday" },
     { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "PT", "subject_code": "PE101", "classroom": "GROUND", "time_start": "15:40", "time_end": "16:35", "day": "Thursday" },
-    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Data Structure Lab", "subject_code": "CS191", "classroom": "CL-01", "time_start": "13:50", "time_end": "14:45", "day": "Friday" },
+    { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Data Structure Lab", "subject_code": "CS191", "classroom": "CL-01", "time_start": "13:50", "time_end": "16:30", "day": "Friday" },
     { "semester": 2, "branch": "CSB", "group": "ALL", "class_name": "Data Structures", "subject_code": "CS101", "classroom": "U-513", "time_start": "09:00", "time_end": "09:55", "day": "Wednesday" }
   ]
 }

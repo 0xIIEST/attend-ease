@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useFirestore, useCollection, useMemoFirebase, setDocumentNonBlocking } from "@/firebase";
 import { ClassSchedule, AttendanceRecord, AttendanceStatus } from "@/lib/types";
 import { useAuth } from "@/context/AuthContext";
 import { format, isWithinInterval, parseISO, isSaturday, isSunday } from "date-fns";
@@ -10,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarIcon, Clock, MapPin, Check, X, MinusCircle, Info, Coffee, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { collection, query, where, doc, serverTimestamp } from "firebase/firestore";
 import holidaysData from "@/data/holidays.json";
 import examsData from "@/data/exams.json";
 import scheduleData from "@/data/schedule.json";
@@ -19,11 +17,12 @@ interface Props {
   schedule: ClassSchedule[];
   selectedDate: Date;
   onCourseClick: (code: string) => void;
+  attendanceRecords: { [key: string]: string }; // subjectCode -> status
+  onAttendanceUpdate: (subjectCode: string, status: string | null) => void;
 }
 
-export function DailySchedule({ schedule, selectedDate, onCourseClick }: Props) {
+export function DailySchedule({ schedule, selectedDate, onCourseClick, attendanceRecords, onAttendanceUpdate }: Props) {
   const { profile } = useAuth();
-  const db = useFirestore();
   const dayName = format(selectedDate, 'EEEE');
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
@@ -33,10 +32,10 @@ export function DailySchedule({ schedule, selectedDate, onCourseClick }: Props) 
   });
 
   const holiday = holidaysData.holidays.find(h => h.date === dateStr);
-  const examPeriod = examsData.periods.find(p => 
-    isWithinInterval(selectedDate, { 
-      start: parseISO(p.start), 
-      end: parseISO(p.end) 
+  const examPeriod = examsData.periods.find(p =>
+    isWithinInterval(selectedDate, {
+      start: parseISO(p.start),
+      end: parseISO(p.end)
     })
   );
   const isWeekend = isSaturday(selectedDate) || isSunday(selectedDate);
@@ -44,41 +43,16 @@ export function DailySchedule({ schedule, selectedDate, onCourseClick }: Props) 
   // Filter out LUNCH (BREAK) and show only academic classes for the group
   // Sort classes chronologically by time_start
   const filteredClasses = schedule
-    .filter(c => 
-      c.day === dayName && 
+    .filter(c =>
+      c.day === dayName &&
       c.subject_code !== 'BREAK' && // Remove lunch from daily list
       (c.branch === profile?.branch || c.branch === 'ALL') &&
       (c.group === profile?.group || c.group === 'ALL')
     )
     .sort((a, b) => a.time_start.localeCompare(b.time_start));
 
-  const attendanceQuery = useMemoFirebase(() => {
-    if (!db || !profile) return null;
-    return query(
-      collection(db, 'studentProfiles', profile.id, 'attendanceRecords'),
-      where("classDate", "==", dateStr)
-    );
-  }, [db, profile, dateStr]);
-
-  const { data: records } = useCollection<AttendanceRecord>(attendanceQuery);
-
-  const attendanceRecordsMap = (records || []).reduce((acc, curr) => {
-    acc[curr.subjectCode] = curr.status;
-    return acc;
-  }, {} as Record<string, AttendanceStatus>);
-
   const markAttendance = (subjectCode: string, status: AttendanceStatus) => {
-    if (!profile || !db || subjectCode === 'BREAK') return;
-    const recordId = `${subjectCode}_${dateStr}`;
-    const recordRef = doc(db, 'studentProfiles', profile.id, 'attendanceRecords', recordId);
-    
-    setDocumentNonBlocking(recordRef, {
-      studentId: profile.id,
-      subjectCode,
-      status,
-      classDate: dateStr,
-      markedAt: serverTimestamp()
-    }, { merge: true });
+    onAttendanceUpdate(subjectCode, status);
   };
 
   if (!isWithinSem && !holiday && !examPeriod) {
@@ -148,24 +122,24 @@ export function DailySchedule({ schedule, selectedDate, onCourseClick }: Props) 
       ) : (
         <div className="space-y-3">
           {filteredClasses.map((item) => {
-            const currentStatus = attendanceRecordsMap[item.subject_code] || null;
-            
+            const currentStatus = attendanceRecords[item.subject_code] || null;
+
             return (
               <Card key={item.subject_code + item.time_start} className={cn(
                 "transition-all duration-200 border-l-4",
                 currentStatus === 'present' ? "border-l-green-500 bg-green-50/20" :
-                currentStatus === 'absent' ? "border-l-red-500 bg-red-50/20" :
-                currentStatus === 'cancelled' ? "border-l-orange-500 bg-orange-50/20" :
-                "border-l-primary/30"
+                  currentStatus === 'absent' ? "border-l-red-500 bg-red-50/20" :
+                    currentStatus === 'cancelled' ? "border-l-orange-500 bg-orange-50/20" :
+                      "border-l-primary/30"
               )}>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex justify-between items-start gap-2">
-                    <div 
+                    <div
                       className="group transition-opacity cursor-pointer hover:opacity-80"
                       onClick={() => onCourseClick(item.subject_code)}
                     >
                       <h4 className="font-bold leading-none flex items-center gap-1.5 underline-offset-4 decoration-primary/30">
-                        {item.class_name} 
+                        {item.class_name}
                         <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 text-primary" />
                       </h4>
                       <p className="text-xs text-muted-foreground mt-1 uppercase tracking-tight">

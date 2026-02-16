@@ -14,8 +14,8 @@ router = APIRouter()
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 
-# Auto-detect Vercel URL
-vercel_url = os.getenv("VERCEL_URL") or os.getenv("VERCEL_PROJECT_PRODUCTION_URL")
+# Auto-detect Vercel URL: Prioritize the clean production URL over the specific deployment URL
+vercel_url = os.getenv("VERCEL_PROJECT_PRODUCTION_URL") or os.getenv("VERCEL_URL")
 if vercel_url:
     # Vercel env vars do not include https://
     base_url = f"https://{vercel_url}"

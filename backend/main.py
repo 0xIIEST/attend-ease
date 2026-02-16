@@ -7,8 +7,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Check if running on Vercel to set root_path
-root_path = "/api" if os.getenv("VERCEL") else ""
-app = FastAPI(title="AttendEase Backend", root_path=root_path)
+# Removed root_path manipulation as it might cause redirect loops if Vercel strips path
+# root_path = "/api" if os.getenv("VERCEL") else ""
+app = FastAPI(title="AttendEase Backend")
 
 # Allow CORS for the frontend
 allow_origins = os.getenv("ALLOW_ORIGINS", "http://localhost:3000,http://localhost:9002,http://127.0.0.1:3000,http://127.0.0.1:9002").split(",")

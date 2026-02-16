@@ -71,8 +71,17 @@ def update_schedule(admin_email: str, schedule_data: dict = Body(...)):
          raise HTTPException(status_code=403, detail="Not authorized")
     
     try:
-        with open(SCHEDULE_PATH, "w") as f:
-            json.dump(schedule_data, f, indent=2)
-        return {"status": "success", "message": "Schedule updated"}
+        # Update Firestore
+        db.collection('config').document('schedule').set(schedule_data)
+        
+        # Also try to update local file if possible (for local dev)
+        # catch error silently if readonly
+        try:
+            with open(SCHEDULE_PATH, "w") as f:
+                json.dump(schedule_data, f, indent=2)
+        except:
+            pass
+            
+        return {"status": "success", "message": "Schedule updated in Firestore"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

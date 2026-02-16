@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from database import get_db, firebase_auth
+from backend.database import get_db, firebase_auth
 from pydantic import BaseModel
 import os
 import json

@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 import os
 import requests
 from dotenv import load_dotenv
-from database import get_db
+from backend.database import get_db, init_error
 from firebase_admin import auth as firebase_auth
 from datetime import datetime, timedelta
 
@@ -31,7 +31,7 @@ else:
 @router.get("/login")
 def login_google():
     """Redirects the user to the Google Consent Screen."""
-    from database import init_error
+    from backend.database import init_error
     if init_error:
         return Response(content=f"Backend Error: {init_error}. Please check Vercel Environment Variables.", status_code=500)
         

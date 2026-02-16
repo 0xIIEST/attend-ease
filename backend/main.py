@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import students, schedule, auth
+from backend.routers import students, schedule, auth
 import os
 from dotenv import load_dotenv
 
@@ -24,12 +24,12 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(students.router, prefix="/students", tags=["Students"])
 app.include_router(schedule.router, prefix="/schedule", tags=["Schedule"])
-from routers import admin
+from backend.routers import admin
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 
 @app.get("/")
 def read_root():
-    from database import init_error
+    from backend.database import init_error
     if init_error:
         return {"message": "AttendEase API is running, but Backend Error: " + init_error}
     return {"message": "AttendEase API is running"}

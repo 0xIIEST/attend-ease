@@ -19,6 +19,7 @@ export interface AttendanceRecord {
   subjectCode: string;
   status: AttendanceStatus;
   classDate: string; // YYYY-MM-DD
+  timeStart?: string; // HH:MM - distinguishes same subject at different time slots
   markedAt: any;
 }
 

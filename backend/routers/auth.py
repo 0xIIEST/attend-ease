@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 import os
 import requests
 from dotenv import load_dotenv
-from database import get_db
+from backend.database import get_db, init_error
 from firebase_admin import auth as firebase_auth
 from datetime import datetime, timedelta
 
@@ -13,14 +13,31 @@ router = APIRouter()
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-# Frontend URL to redirect back to after successful login
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:9002")
-# This backend's callback URL
-REDIRECT_URI = os.getenv("REDIRECT_URI", "http://localhost:8000/auth/callback")
+
+# Auto-detect Vercel URL: Prioritize the clean production URL over the specific deployment URL
+vercel_url = os.getenv("VERCEL_PROJECT_PRODUCTION_URL") or os.getenv("VERCEL_URL")
+if vercel_url:
+    # Vercel env vars do not include https://
+    base_url = f"https://{vercel_url}"
+    # Frontend is the base URL
+    FRONTEND_URL = os.getenv("FRONTEND_URL", base_url)
+    # Callback is /api/auth/callback
+    REDIRECT_URI = os.getenv("REDIRECT_URI", f"{base_url}/api/auth/callback")
+else:
+    # Local fallback
+    FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:9002")
+    REDIRECT_URI = os.getenv("REDIRECT_URI", "http://localhost:8000/auth/callback")
 
 @router.get("/login")
 def login_google():
     """Redirects the user to the Google Consent Screen."""
+    from backend.database import init_error
+    if init_error:
+        return Response(content=f"Backend Error: {init_error}. Please check Vercel Environment Variables.", status_code=500)
+        
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+         return Response(content="Missing GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET in Environment Variables.", status_code=500)
+
     scope = "openid email profile"
     return RedirectResponse(
         f"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={GOOGLE_CLIENT_ID}&redirect_uri={REDIRECT_URI}&scope={scope}&access_type=offline"

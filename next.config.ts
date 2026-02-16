@@ -1,7 +1,7 @@
-import type {NextConfig} from 'next';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // output: 'export', // Removed to allow Vercel SSR/ISR and API routes
   typescript: {
     ignoreBuildErrors: true,
   },

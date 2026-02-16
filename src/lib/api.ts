@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export const api = {
     auth: {
@@ -36,7 +36,7 @@ export const api = {
             if (!res.ok) throw new Error("Failed to fetch attendance");
             return res.json();
         },
-        markAttendance: async (uid: string, data: { subjectCode: string, status: string | null, classDate: string }) => {
+        markAttendance: async (uid: string, data: { subjectCode: string, status: string | null, classDate: string, timeStart?: string }) => {
             const res = await fetch(`${API_URL}/students/${uid}/attendance`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -50,6 +50,27 @@ export const api = {
         get: async () => {
             const res = await fetch(`${API_URL}/schedule`);
             if (!res.ok) throw new Error("Failed to fetch schedule");
+            return res.json();
+        }
+    },
+    admin: {
+        getUsers: async (adminEmail: string) => {
+            const res = await fetch(`${API_URL}/admin/users?admin_email=${adminEmail}`);
+            if (!res.ok) throw new Error("Failed to fetch users");
+            return res.json();
+        },
+        getStats: async (adminEmail: string) => {
+            const res = await fetch(`${API_URL}/admin/stats?admin_email=${adminEmail}`);
+            if (!res.ok) throw new Error("Failed to fetch stats");
+            return res.json();
+        },
+        updateSchedule: async (adminEmail: string, scheduleData: any) => {
+            const res = await fetch(`${API_URL}/admin/schedule?admin_email=${adminEmail}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(scheduleData)
+            });
+            if (!res.ok) throw new Error("Failed to update schedule");
             return res.json();
         }
     }

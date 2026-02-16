@@ -5,7 +5,6 @@ import { useAuth } from "@/context/AuthContext";
 import { ClassSchedule, getBranchName } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import scheduleData from "@/data/schedule.json";
 import { cn } from "@/lib/utils";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
@@ -18,12 +17,17 @@ function timeToMinutes(timeStr: string) {
   return (hours * 60 + minutes) - (START_HOUR * 60);
 }
 
-export function WeeklySchedule({ onCourseClick }: { onCourseClick: (code: string) => void }) {
+interface WeeklyScheduleProps {
+  schedule: ClassSchedule[];
+  onCourseClick: (code: string) => void;
+}
+
+export function WeeklySchedule({ schedule, onCourseClick }: WeeklyScheduleProps) {
   const { profile } = useAuth();
-  
+
   if (!profile) return null;
 
-  const filteredClasses = (scheduleData.classes as ClassSchedule[]).filter(c => 
+  const filteredClasses = (schedule || []).filter(c =>
     (c.branch === profile.branch || c.branch === 'ALL') &&
     (c.group === profile.group || c.group === 'ALL')
   );
@@ -53,8 +57,8 @@ export function WeeklySchedule({ onCourseClick }: { onCourseClick: (code: string
               {/* Time Column & Grid Rows */}
               <div className="relative" style={{ height: `${TOTAL_MINUTES}px` }}>
                 {hours.map((hour) => (
-                  <div 
-                    key={hour} 
+                  <div
+                    key={hour}
                     className="absolute w-full flex items-center pr-2 border-t text-[10px] text-muted-foreground font-mono"
                     style={{ top: `${(hour - START_HOUR) * 60}px`, height: '60px' }}
                   >
@@ -65,15 +69,15 @@ export function WeeklySchedule({ onCourseClick }: { onCourseClick: (code: string
 
               {/* Main Content Grid */}
               {DAYS.map((day, dayIndex) => (
-                <div 
-                  key={day} 
-                  className="relative border-l border-r last:border-r-0" 
+                <div
+                  key={day}
+                  className="relative border-l border-r last:border-r-0"
                   style={{ height: `${TOTAL_MINUTES}px` }}
                 >
                   {/* Grid background lines */}
                   {hours.map((_, i) => (
-                    <div 
-                      key={i} 
+                    <div
+                      key={i}
                       className="absolute w-full border-t border-muted/20"
                       style={{ top: `${i * 60}px`, height: '60px' }}
                     />
@@ -94,8 +98,8 @@ export function WeeklySchedule({ onCourseClick }: { onCourseClick: (code: string
                           onClick={() => !isBreak && onCourseClick(cls.subject_code)}
                           className={cn(
                             "absolute left-1 right-1 rounded-md p-2 border flex flex-col justify-between transition-all group overflow-hidden",
-                            isBreak 
-                              ? "bg-muted/40 border-muted text-muted-foreground" 
+                            isBreak
+                              ? "bg-muted/40 border-muted text-muted-foreground"
                               : "bg-primary/10 border-primary/20 hover:bg-primary/20 cursor-pointer shadow-sm"
                           )}
                           style={{
@@ -116,7 +120,7 @@ export function WeeklySchedule({ onCourseClick }: { onCourseClick: (code: string
                               </p>
                             )}
                           </div>
-                          
+
                           <div className="flex justify-between items-end">
                             <span className="text-[8px] opacity-70 font-mono">
                               {cls.time_start} - {cls.time_end}

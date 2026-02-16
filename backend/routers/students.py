@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Body
-from database import get_db
+from backend.database import get_db
 from pydantic import BaseModel
 from typing import Optional, List
 
@@ -53,13 +53,18 @@ class AttendanceUpdate(BaseModel):
     subjectCode: str
     status: Optional[str] # 'present', 'absent', 'cancelled', or None
     classDate: str # YYYY-MM-DD
+    timeStart: Optional[str] = None # HH:MM - to distinguish same subject at different times
     timestamp: Optional[str] = None # ISO format
 
 @router.post("/{uid}/attendance")
 def mark_attendance(uid: str, update: AttendanceUpdate):
     """Marks attendance for a specific class."""
     try:
+        # Include timeStart in record ID to distinguish same subject at different time slots
         record_id = f"{update.subjectCode}_{update.classDate}"
+        if update.timeStart:
+            record_id = f"{update.subjectCode}_{update.classDate}_{update.timeStart.replace(':', '')}"
+        
         doc_ref = db.collection('studentProfiles').document(uid).collection('attendanceRecords').document(record_id)
         
         data = {
@@ -69,8 +74,21 @@ def mark_attendance(uid: str, update: AttendanceUpdate):
             "classDate": update.classDate,
             "markedAt": firestore.SERVER_TIMESTAMP
         }
+        if update.timeStart:
+            data["timeStart"] = update.timeStart
         
         doc_ref.set(data, merge=True)
-        return {"status": "success", "data": data}
+        
+        return {
+            "status": "success",
+            "data": {
+                "studentId": uid,
+                "subjectCode": update.subjectCode,
+                "status": update.status,
+                "classDate": update.classDate,
+                "timeStart": update.timeStart,
+            }
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+

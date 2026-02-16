@@ -11,11 +11,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import scheduleData from "@/data/schedule.json";
+// import scheduleData from "@/data/schedule.json"; // Removed static import
 import holidaysData from "@/data/holidays.json";
 import examsData from "@/data/exams.json";
 import { useAuth } from "@/context/AuthContext";
-import { AttendanceRecord, getBranchName } from "@/lib/types";
+import { AttendanceRecord, getBranchName, ClassSchedule } from "@/lib/types";
 import { parseISO, isWithinInterval, isSaturday, isSunday, format } from "date-fns";
 import { api } from "@/lib/api";
 
@@ -26,25 +26,30 @@ export function Dashboard() {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [allRecords, setAllRecords] = useState<AttendanceRecord[]>([]);
+  const [scheduleData, setScheduleData] = useState<{ semesterConfig: any, classes: ClassSchedule[] } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
     // Initial date logic ... (simplified for brevity, keeping existing behaviour if possible)
   }, []);
 
-  // Fetch Attendance from Backend API
+  // Fetch Attendance & Schedule from Backend API
   useEffect(() => {
-    async function fetchAttendance() {
+    async function fetchData() {
       if (user && profile) {
         try {
-          const records = await api.students.getAttendance(user.uid);
+          const [records, schedule] = await Promise.all([
+            api.students.getAttendance(user.uid),
+            api.schedule.get()
+          ]);
           setAllRecords(records);
+          setScheduleData(schedule);
         } catch (e) {
-          console.error("Failed to fetch attendance", e);
+          console.error("Failed to fetch data", e);
         }
       }
     }
-    fetchAttendance();
+    fetchData();
   }, [user, profile]);
 
   // Removed: Auto-absent marking logic (Now handled by backend)
@@ -78,7 +83,8 @@ export function Dashboard() {
       if (isHoliday || isExam || isWknd) return;
 
       const dayName = format(dayDate, 'EEEE');
-      const expectedClasses = scheduleData.classes.filter(c =>
+      const classes = scheduleData?.classes || [];
+      const expectedClasses = classes.filter(c =>
         c.day === dayName &&
         c.subject_code !== 'BREAK' &&
         (c.branch === profile.branch || c.branch === 'ALL') &&
@@ -102,7 +108,7 @@ export function Dashboard() {
     });
 
     return statuses;
-  }, [allRecords, profile]);
+  }, [allRecords, profile, scheduleData]);
 
   const modifiers = {
     holiday: holidaysData.holidays.map(h => parseISO(h.date)),
@@ -132,21 +138,19 @@ export function Dashboard() {
     setActiveView('course-detail');
   };
 
-  const handleAttendanceUpdate = async (subjectCode: string, status: string | null) => {
+  const handleAttendanceUpdate = async (subjectCode: string, status: string | null, timeStart?: string) => {
     if (!user || !profile) return;
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
     // Optimistic Update
     setAllRecords(prev => {
-      const existingIndex = prev.findIndex(r => r.subjectCode === subjectCode && r.classDate === dateStr);
+      const existingIndex = prev.findIndex(r =>
+        r.subjectCode === subjectCode &&
+        r.classDate === dateStr &&
+        (!timeStart || r.timeStart === timeStart)
+      );
       if (existingIndex >= 0) {
         if (status === null) {
-          // Remove record if status is null/unmarked (logic depends on how we handle unmarking)
-          // Actually button passing null means toggle off?
-          // The DailySchedule passes 'present', 'absent', 'cancelled' or null.
-          // If null, we might want to delete the record?
-          // For now, let's assume we just update it.
-          // If status is null, we filter it out.
           return prev.filter((_, i) => i !== existingIndex);
         }
         const newRecords = [...prev];
@@ -154,13 +158,13 @@ export function Dashboard() {
         return newRecords;
       } else {
         if (status === null) return prev;
-        // Add new record
         return [...prev, {
           studentId: user.uid,
           subjectCode,
           status: status as any,
           classDate: dateStr,
-          markedAt: new Date().toISOString() // temporary
+          timeStart: timeStart || '',
+          markedAt: new Date().toISOString()
         }];
       }
     });
@@ -169,11 +173,11 @@ export function Dashboard() {
       await api.students.markAttendance(user.uid, {
         subjectCode,
         status,
-        classDate: dateStr
+        classDate: dateStr,
+        timeStart
       });
     } catch (e) {
       console.error("Failed to mark attendance", e);
-      // Revert on failure? (TODO: Implement rollback)
     }
   };
 
@@ -240,16 +244,24 @@ export function Dashboard() {
 
                     <div className="lg:col-span-4 bg-muted/20">
                       <ScrollArea className="h-[500px] lg:h-[600px] p-6">
-                        <DailySchedule
-                          schedule={scheduleData.classes as any}
-                          selectedDate={selectedDate}
-                          onCourseClick={handleCourseClick}
-                          attendanceRecords={allRecords
-                            .filter(r => r.classDate === format(selectedDate, 'yyyy-MM-dd'))
-                            .reduce((acc, curr) => ({ ...acc, [curr.subjectCode]: curr.status }), {})
-                          }
-                          onAttendanceUpdate={handleAttendanceUpdate}
-                        />
+                        {scheduleData ? (
+                          <DailySchedule
+                            schedule={scheduleData.classes || []}
+                            semesterConfig={scheduleData.semesterConfig}
+                            selectedDate={selectedDate}
+                            onCourseClick={handleCourseClick}
+                            attendanceRecords={allRecords
+                              .filter(r => r.classDate === format(selectedDate, 'yyyy-MM-dd'))
+                              .reduce((acc, curr) => {
+                                const key = curr.timeStart ? `${curr.subjectCode}_${curr.timeStart}` : curr.subjectCode;
+                                return { ...acc, [key]: curr.status };
+                              }, {} as Record<string, string | null>)
+                            }
+                            onAttendanceUpdate={handleAttendanceUpdate}
+                          />
+                        ) : (
+                          <div className="p-4 text-center text-muted-foreground">Loading schedule...</div>
+                        )}
                       </ScrollArea>
                     </div>
                   </div>
@@ -259,7 +271,14 @@ export function Dashboard() {
 
             {activeView === 'weekly' && (
               <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                <WeeklySchedule onCourseClick={handleCourseClick} />
+                {scheduleData ? (
+                  <WeeklySchedule
+                    schedule={scheduleData.classes || []}
+                    onCourseClick={handleCourseClick}
+                  />
+                ) : (
+                  <div className="p-4 text-center text-muted-foreground">Loading schedule...</div>
+                )}
               </div>
             )}
 
